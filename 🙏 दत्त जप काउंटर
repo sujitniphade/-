@@ -1,0 +1,198 @@
+import tkinter as tk
+from tkinter import ttk
+
+TOTAL = 1111
+
+counter = 0
+highlight = 0
+
+counter_running = False
+highlight_running = False
+
+words = ["ॐ", "द्रां", "दत्तात्रेयाय", "नमः"]
+
+root = tk.Tk()
+root.title("🙏 दत्त जप काउंटर")
+root.geometry("900x320")
+root.resizable(False, False)
+
+# ------------------------
+# Counter
+# ------------------------
+
+counter_lbl = tk.Label(
+    root,
+    text="0 / 1111",
+    font=("Arial", 24, "bold"),
+    fg="blue"
+)
+counter_lbl.pack(pady=10)
+
+# ------------------------
+# Mantra
+# ------------------------
+
+text = tk.Text(
+    root,
+    height=2,
+    width=35,
+    font=("Nirmala UI", 28),
+    bd=0
+)
+text.pack()
+
+text.tag_config("normal", foreground="black")
+text.tag_config("highlight", foreground="green")
+
+
+def draw():
+    text.config(state="normal")
+    text.delete("1.0", tk.END)
+
+    for i, word in enumerate(words):
+
+        tag = "highlight" if i == highlight else "normal"
+
+        text.insert(tk.END, word + " ", tag)
+
+    text.config(state="disabled")
+
+
+draw()
+
+# ------------------------
+# Progress
+# ------------------------
+
+progress = ttk.Progressbar(
+    root,
+    maximum=TOTAL,
+    length=650
+)
+progress.pack(pady=15)
+
+# ------------------------
+# Settings
+# ------------------------
+
+frame = tk.Frame(root)
+frame.pack()
+
+tk.Label(frame, text="Counter Time").grid(row=0, column=0)
+
+counter_sec = tk.StringVar(value="5")
+
+tk.Entry(
+    frame,
+    width=6,
+    textvariable=counter_sec
+).grid(row=0, column=1, padx=5)
+
+tk.Label(frame, text="Highlight Time").grid(row=0, column=2)
+
+highlight_sec = tk.StringVar(value="0.5")
+
+tk.Entry(
+    frame,
+    width=6,
+    textvariable=highlight_sec
+).grid(row=0, column=3, padx=5)
+
+# ------------------------
+# Counter Loop
+# ------------------------
+
+def counter_loop():
+    global counter
+
+    if not counter_running:
+        return
+
+    if counter < TOTAL:
+
+        counter += 1
+
+        counter_lbl.config(text=f"{counter} / {TOTAL}")
+
+        progress["value"] = counter
+
+        try:
+            sec = float(counter_sec.get())
+        except:
+            sec = 5
+
+        root.after(int(sec * 1000), counter_loop)
+
+# ------------------------
+# Highlight Loop
+# ------------------------
+
+def highlight_loop():
+    global highlight
+
+    if not highlight_running:
+        return
+
+    highlight += 1
+
+    if highlight >= len(words):
+        highlight = 0
+
+    draw()
+
+    try:
+        sec = float(highlight_sec.get())
+    except:
+        sec = 0.5
+
+    root.after(int(sec * 1000), highlight_loop)
+
+# ------------------------
+# Buttons
+# ------------------------
+
+def start():
+    global counter_running, highlight_running
+
+    if not counter_running:
+        counter_running = True
+        counter_loop()
+
+    if not highlight_running:
+        highlight_running = True
+        highlight_loop()
+
+
+def pause():
+    global counter_running, highlight_running
+
+    counter_running = False
+    highlight_running = False
+
+
+def reset():
+    global counter, highlight
+    global counter_running, highlight_running
+
+    counter_running = False
+    highlight_running = False
+
+    counter = 0
+    highlight = 0
+
+    counter_lbl.config(text="0 / 1111")
+    progress["value"] = 0
+
+    draw()
+
+
+btn = tk.Frame(root)
+btn.pack(pady=20)
+
+tk.Button(btn, text="▶ Start", width=12, command=start).pack(side="left", padx=5)
+
+tk.Button(btn, text="⏸ Pause", width=12, command=pause).pack(side="left", padx=5)
+
+tk.Button(btn, text="🔄 Reset", width=12, command=reset).pack(side="left", padx=5)
+
+root.mainloop()
